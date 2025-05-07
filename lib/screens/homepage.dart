@@ -1,34 +1,21 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:weather_application/screens/loading_screen.dart';
+import 'package:weather_application/services/location.dart';
 import 'package:weather_application/services/weather.dart';
 import 'package:weather_application/widgets/search_custom.dart';
 import 'package:weather_application/widgets/weather_details.dart';
 import 'package:weather_application/widgets/weather_stats_table.dart';
-import 'package:weather_icons/weather_icons.dart';
 
-import 'package:weather_application/screens/search.dart';
-import 'package:weather_application/screens/searchLoading.dart';
-import 'package:anim_search_bar/anim_search_bar.dart';
-import 'package:flutter_weather_bg_null_safety/bg/weather_bg.dart';
-import 'package:flutter_weather_bg_null_safety/bg/weather_cloud_bg.dart';
-import 'package:flutter_weather_bg_null_safety/bg/weather_color_bg.dart';
-import 'package:flutter_weather_bg_null_safety/bg/weather_night_star_bg.dart';
-import 'package:flutter_weather_bg_null_safety/bg/weather_rain_snow_bg.dart';
-import 'package:flutter_weather_bg_null_safety/bg/weather_thunder_bg.dart';
-import 'package:flutter_weather_bg_null_safety/flutter_weather_bg.dart';
-import 'package:flutter_weather_bg_null_safety/utils/image_utils.dart';
-import 'package:flutter_weather_bg_null_safety/utils/print_utils.dart';
-import 'package:flutter_weather_bg_null_safety/utils/weather_type.dart';
+class HomePage extends StatefulWidget {
+  final dynamic locationWeather;
 
-class Homepage extends StatefulWidget {
-  Homepage({this.locationWeather});
-  final locationWeather;
+  HomePage({this.locationWeather});
 
   @override
-  _HomepageState createState() => _HomepageState();
+  _HomePage createState() => _HomePage();
 }
 
-class _HomepageState extends State<Homepage> {
+class _HomePage extends State<HomePage> {
   var long;
   var lat;
   var temperature;
@@ -43,30 +30,55 @@ class _HomepageState extends State<Homepage> {
   var max;
   var pressure;
   var animation;
+  bool isLoading = true;
 
-  TextEditingController Controller = new TextEditingController();
+  TextEditingController controller = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     updateUI(widget.locationWeather);
+    fetchLocationAndWeather();
+  }
+
+  Future<void> fetchLocationAndWeather() async {
+    try {
+      // Fetch the user’s location
+      Location location = Location();
+      await location.getCurrentLocation();
+
+      // Update state with latitude and longitude
+      lat = location.latitude;
+      long = location.longitude;
+
+      // Fetch weather data for the current location
+      var weatherData = await Weather().getLocationWeather();
+
+      // Update the UI with the fetched weather data
+      updateUI(weatherData);
+    } catch (e) {
+      print('Error fetching location/weather data: $e');
+    }
+    setState(() {
+      isLoading = false;
+    });
   }
 
   void updateUI(dynamic weatherData) {
     if (weatherData != null) {
       setState(() {
-        long = weatherData['coord']['lon']?.toDouble() ?? 0.0; // Ensure it's a double
-        lat = weatherData['coord']['lat']?.toDouble() ?? 0.0; // Ensure it's a double
-        temperature = weatherData['main']['temp']?.toDouble() ?? 0.0; // Ensure it's a double
-        feelsLike = weatherData['main']['feels_like']?.toDouble() ?? 0.0; // Ensure it's a double
+        long = weatherData['coord']['lon']?.toDouble() ?? 0.0;
+        lat = weatherData['coord']['lat']?.toDouble() ?? 0.0;
+        temperature = weatherData['main']['temp']?.toDouble() ?? 0.0;
+        feelsLike = weatherData['main']['feels_like']?.toDouble() ?? 0.0;
         description = weatherData['weather'][0]['description'] ?? 'Unavailable';
         humidity = weatherData['main']['humidity'] ?? 0;
-        windSpeed = weatherData['wind']['speed']?.toDouble() ?? 0.0; // Ensure it's a double
+        windSpeed = weatherData['wind']['speed']?.toDouble() ?? 0.0;
         cityName = weatherData['name'] ?? 'Unknown';
         country = weatherData['sys']['country'] ?? 'Unknown';
         id = weatherData['weather'][0]['id'] ?? 800;
-        min = weatherData['main']['temp_min']?.toDouble() ?? 0.0; // Ensure it's a double
-        max = weatherData['main']['temp_max']?.toDouble() ?? 0.0; // Ensure it's a double
+        min = weatherData['main']['temp_min']?.toDouble() ?? 0.0;
+        max = weatherData['main']['temp_max']?.toDouble() ?? 0.0;
         pressure = weatherData['main']['pressure'] ?? 0;
         animation = Weather().getWeatherAnimation(id);
       });
@@ -76,61 +88,86 @@ class _HomepageState extends State<Homepage> {
   @override
   Widget build(BuildContext context) {
     String background = Weather().getWeatherBackground(id);
-    animation = Weather().getWeatherAnimation(id);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
       extendBodyBehindAppBar: true,
-      // backgroundColor: Colors.blueAccent,
       appBar: AppBar(
-        backgroundColor: Color(0x44000000),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            SearchCustom(
-              controller: Controller,
-              onSearch: (String city) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) {
-                      return SearchLoading(city: city);
-                    },
+        title: SearchCustom(
+          controller: controller,
+          onSearch: (String city) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) {
+                  return LoadingScreen(city: city);
+                },
+              ),
+            );
+          },
+        ),
+      ),
+      body:
+          isLoading
+              ? Center(child: CircularProgressIndicator())
+              : Stack(
+                children: [
+                  // The background image
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        image: AssetImage(background),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
 
-      body: Container(
-        margin: EdgeInsets.only(top: 0),
-        width: MediaQuery.of(context).size.width,
-        decoration: BoxDecoration(image: DecorationImage(image: AssetImage(background), fit: BoxFit.cover)),
-        child: Column(
-          children: [
-            SizedBox(height: 150),
-            WeatherDetails(
-              cityName: cityName,
-              country: country,
-              animation: animation,
-              temperature: temperature,
-              description: description,
-            ),
-            SizedBox(height: 30),
-            WeatherStatsTable(
-              feelsLike: feelsLike,
-              minTemp: min,
-              maxTemp: max,
-              humidity: humidity,
-              windSpeed: windSpeed,
-              pressure: pressure,
-            ),
-          ],
-        ),
-      ),
+                  // A gradient overlay on top of the background
+                  Container(
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withOpacity(0.4), // Darker at the top
+                          Colors.black.withOpacity(
+                            0.4,
+                          ), // Lighter at the bottom
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Content of the screen
+                  Column(
+                    children: [
+                      const SizedBox(height: 150),
+                      WeatherDetails(
+                        cityName: cityName,
+                        country: country,
+                        animation: animation,
+                        temperature: temperature,
+                        description: description,
+                      ),
+                      const SizedBox(height: 30),
+                      WeatherStatsTable(
+                        feelsLike: feelsLike,
+                        minTemp: min,
+                        maxTemp: max,
+                        humidity: humidity,
+                        windSpeed: windSpeed,
+                        pressure: pressure,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
     );
   }
 }

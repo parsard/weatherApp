@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:weather_application/services/location.dart';
 import 'package:weather_application/services/connection.dart';
-import 'package:weather_icons/weather_icons.dart';
 
 const apiKey = 'efa27f9b2c2d2d8b7484ba75a8526a72';
 
@@ -26,9 +24,6 @@ class Weather {
     Location location = Location();
     location.getCurrentLocation();
 
-    // Connection searchLocation = Connection(
-    //   'https://api.openweathermap.org/data/3.0/onecall?lat=$city&appid=$apiKey&units=metric',
-    // );
     Connection searchLocation = Connection(
       'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric',
     );

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:weather_application/screens/homepage.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:weather_application/services/weather.dart';
+import 'package:weather_application/screens/homepage.dart';
 
 class LoadingScreen extends StatefulWidget {
+  final String? city;
+
+  LoadingScreen({this.city});
+
   @override
   _LoadingScreenState createState() => _LoadingScreenState();
 }
@@ -12,13 +16,35 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   void initState() {
     super.initState();
-    getLocationData();
+    loadWeatherData();
   }
 
-  void getLocationData() async {
+  Future<void> loadWeatherData() async {
     try {
       Weather weather = Weather();
-      var weatherData = await weather.getLocationWeather();
+      var weatherData;
+
+      // Fetch weather based on city or location
+      if (widget.city == null) {
+        // Location-based weather
+        weatherData = await weather.getLocationWeather();
+      } else {
+        // Search-based weather
+        weatherData = await weather.getSearchWeather(widget.city!);
+
+        if (weatherData == null) {
+          // Fallback to location-based weather if city not found
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'City "${widget.city}" not found. Showing location-based weather instead.',
+              ),
+            ),
+          );
+
+          weatherData = await weather.getLocationWeather();
+        }
+      }
 
       if (weatherData == null) {
         throw Exception('No weather data received');
@@ -27,17 +53,39 @@ class _LoadingScreenState extends State<LoadingScreen> {
           context,
           MaterialPageRoute(
             builder: (context) {
-              return Homepage(locationWeather: weatherData);
+              return HomePage(locationWeather: weatherData);
             },
           ),
         );
       }
     } catch (e) {
-      print('Error: $e'); // Log the error for debugging
+      print('Error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Unable to fetch weather data. Please try again.')));
+        // Handle errors and fallback to location-based weather
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                widget.city == null
+                    ? Text(
+                      'Unable to fetch location-based weather data. Please try again.',
+                    )
+                    : Text(
+                      'Unable to fetch weather data for "${widget.city}". Showing location-based weather instead.',
+                    ),
+          ),
+        );
+
+        var fallbackWeather = await Weather().getLocationWeather();
+        if (fallbackWeather != null && mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) {
+                return HomePage(locationWeather: fallbackWeather);
+              },
+            ),
+          );
+        }
       }
     }
   }
@@ -47,7 +95,19 @@ class _LoadingScreenState extends State<LoadingScreen> {
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [SpinKitFadingCube(color: Colors.red, size: 100.0)],
+        children: [
+          SpinKitFadingCube(
+            color: widget.city == null ? Colors.red : Colors.blue,
+            size: 100.0,
+          ),
+          SizedBox(height: 20),
+          Text(
+            widget.city == null
+                ? 'Fetching weather for your location...'
+                : 'Fetching weather for ${widget.city}...',
+            style: TextStyle(fontSize: 18, color: Colors.grey),
+          ),
+        ],
       ),
     );
   }
