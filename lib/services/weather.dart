@@ -21,14 +21,22 @@ class Weather {
   }
 
   Future<dynamic> getSearchWeather(String city) async {
-    Location location = Location();
-    location.getCurrentLocation();
+    try {
+      // Construct the URL for city-based weather queries
+      Connection searchLocation = Connection(
+        'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric',
+      );
 
-    Connection searchLocation = Connection(
-      'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric',
-    );
-    var weatherData = await searchLocation.getWeatherData();
-    return weatherData;
+      // Fetch weather data from the API
+      var weatherData = await searchLocation.getWeatherData();
+
+      // Log the fetched weather data
+      print('Fetched weather data for city: $city');
+      return weatherData;
+    } catch (e) {
+      print('Error fetching weather for city: $e');
+      return null; // Return null if there was an error fetching data
+    }
   }
 
   String getWeatherBackground(int condition) {

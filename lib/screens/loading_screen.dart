@@ -24,31 +24,25 @@ class _LoadingScreenState extends State<LoadingScreen> {
       Weather weather = Weather();
       var weatherData;
 
-      // Fetch weather based on city or location
       if (widget.city == null) {
-        // Location-based weather
+        print('Fetching location-based weather...');
         weatherData = await weather.getLocationWeather();
       } else {
-        // Search-based weather
+        print('Fetching weather for city: ${widget.city}');
         weatherData = await weather.getSearchWeather(widget.city!);
 
         if (weatherData == null) {
-          // Fallback to location-based weather if city not found
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'City "${widget.city}" not found. Showing location-based weather instead.',
-              ),
-            ),
-          );
-
+          print('City not found. Falling back to location-based weather...');
           weatherData = await weather.getLocationWeather();
+        } else {
+          print('Weather data fetched successfully for ${widget.city}');
         }
       }
 
       if (weatherData == null) {
-        throw Exception('No weather data received');
+        throw Exception('No weather data received.');
       } else if (mounted) {
+        print('Weather data fetched successfully. Moving to HomePage...');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -59,33 +53,13 @@ class _LoadingScreenState extends State<LoadingScreen> {
         );
       }
     } catch (e) {
-      print('Error: $e');
+      print('Error loading weather data: $e');
       if (mounted) {
-        // Handle errors and fallback to location-based weather
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                widget.city == null
-                    ? Text(
-                      'Unable to fetch location-based weather data. Please try again.',
-                    )
-                    : Text(
-                      'Unable to fetch weather data for "${widget.city}". Showing location-based weather instead.',
-                    ),
+            content: Text('Unable to fetch weather data. Please try again.'),
           ),
         );
-
-        var fallbackWeather = await Weather().getLocationWeather();
-        if (fallbackWeather != null && mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                return HomePage(locationWeather: fallbackWeather);
-              },
-            ),
-          );
-        }
       }
     }
   }

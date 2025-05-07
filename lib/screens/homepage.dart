@@ -97,77 +97,73 @@ class _HomePage extends State<HomePage> {
         elevation: 0,
         title: SearchCustom(
           controller: controller,
-          onSearch: (String city) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) {
-                  return LoadingScreen(city: city);
-                },
-              ),
-            );
+          onSearch: (String city) async {
+            try {
+              // Fetch weather data for the searched city
+              var weatherData = await Weather().getSearchWeather(city);
+
+              // Update the UI with the fetched weather data
+              updateUI(weatherData);
+            } catch (e) {
+              print('Error fetching weather data for city: $e');
+            }
           },
         ),
       ),
-      body:
-          isLoading
-              ? Center(child: CircularProgressIndicator())
-              : Stack(
-                children: [
-                  // The background image
-                  Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage(background),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
+      body: Stack(
+        children: [
+          // The background image
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage(background),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
 
-                  // A gradient overlay on top of the background
-                  Container(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.black.withOpacity(0.4), // Darker at the top
-                          Colors.black.withOpacity(
-                            0.4,
-                          ), // Lighter at the bottom
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Content of the screen
-                  Column(
-                    children: [
-                      const SizedBox(height: 150),
-                      WeatherDetails(
-                        cityName: cityName,
-                        country: country,
-                        animation: animation,
-                        temperature: temperature,
-                        description: description,
-                      ),
-                      const SizedBox(height: 30),
-                      WeatherStatsTable(
-                        feelsLike: feelsLike,
-                        minTemp: min,
-                        maxTemp: max,
-                        humidity: humidity,
-                        windSpeed: windSpeed,
-                        pressure: pressure,
-                      ),
-                    ],
-                  ),
+          // A gradient overlay on top of the background
+          Container(
+            width: MediaQuery.of(context).size.width,
+            height: MediaQuery.of(context).size.height,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withOpacity(0.4), // Darker at the top
+                  Colors.black.withOpacity(0.4), // Lighter at the bottom
                 ],
               ),
+            ),
+          ),
+
+          // Content of the screen
+          Column(
+            children: [
+              const SizedBox(height: 150),
+              WeatherDetails(
+                cityName: cityName,
+                country: country,
+                animation: animation,
+                temperature: temperature,
+                description: description,
+              ),
+              const SizedBox(height: 30),
+              WeatherStatsTable(
+                feelsLike: feelsLike,
+                minTemp: min,
+                maxTemp: max,
+                humidity: humidity,
+                windSpeed: windSpeed,
+                pressure: pressure,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
