@@ -11,33 +11,26 @@ class LoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final weatherProvider = Provider.of<WeatherProvider>(
-      context,
-      listen: false,
-    );
-    // Ensure fetchWeather is only triggered once
+    final weatherProvider = Provider.of<WeatherProvider>(context, listen: false);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (weatherProvider.isLoading && weatherProvider.cityName == null) {
-        weatherProvider.fetchWeather(city: city);
+      if (weatherProvider.isLoading) {
+        weatherProvider.fetchWeather(city: city ?? 'Default City');
       }
     });
 
     return Consumer<WeatherProvider>(
       builder: (context, weatherProvider, child) {
+        // Show loading spinner while fetching data
         if (weatherProvider.isLoading) {
           return Scaffold(
             body: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SpinKitFadingCube(
-                  color: city == null ? Colors.red : Colors.blue,
-                  size: 100.0,
-                ),
+                const SpinKitFadingCube(color: Colors.blue, size: 100.0),
                 const SizedBox(height: 20),
                 Text(
-                  city == null
-                      ? 'Fetching weather for your location...'
-                      : 'Fetching weather for $city...',
+                  city == null ? 'Fetching weather for your location...' : 'Fetching weather for $city...',
                   style: const TextStyle(fontSize: 18, color: Colors.grey),
                 ),
               ],
@@ -45,14 +38,12 @@ class LoadingScreen extends StatelessWidget {
           );
         }
 
+        // Transition to HomePage after fetching data
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
         });
 
-        return const SizedBox();
+        return const SizedBox(); // Empty widget while navigating
       },
     );
   }

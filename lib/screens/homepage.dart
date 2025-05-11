@@ -14,8 +14,8 @@ class HomePage extends StatelessWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    String background =
-        weatherProvider.background ?? 'images/blue_background.jpg';
+    String background = weatherProvider.background ?? 'images/yellow.jpg';
+    print('Background Image Path: $background');
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -35,12 +35,7 @@ class HomePage extends StatelessWidget {
           Container(
             width: MediaQuery.of(context).size.width,
             height: MediaQuery.of(context).size.height,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(background),
-                fit: BoxFit.cover,
-              ),
-            ),
+            decoration: BoxDecoration(image: DecorationImage(image: AssetImage(background), fit: BoxFit.cover)),
           ),
           Container(
             width: MediaQuery.of(context).size.width,
@@ -49,10 +44,7 @@ class HomePage extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.4),
-                  Colors.black.withOpacity(0.4),
-                ],
+                colors: [Colors.black.withOpacity(0.4), Colors.black.withOpacity(0.4)],
               ),
             ),
           ),

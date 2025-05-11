@@ -49,11 +49,11 @@ class Weather {
     } else if (condition < 800) {
       return 'images/fog.jpg';
     } else if (condition == 800) {
-      return 'images/blue_background.jpg';
+      return 'images/yellow.jpg';
     } else if (condition <= 804) {
       return 'images/cloudy.jpg';
     } else {
-      return 'images/blue_background.jpg'; // Default background
+      return 'images/yellow.jpg'; // Default background
     }
   }
 
