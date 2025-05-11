@@ -10,18 +10,16 @@ dependencies:
   flutter:
     sdk: flutter
 
-  cupertino_icons: 
-  geolocator: 
-  http: 
-  flutter_spinkit: 
-  anim_search_bar: 
-  weather_icons: 
+  cupertino_icons:
+  geolocator:
+  http:
+  flutter_spinkit:
+  anim_search_bar:
+  weather_icons:
   flutter_weather_bg_null_safety:
-  permission_handler: 
+  permission_handler:
   lottie:
-
-
-
+  provider:
 
 dev_dependencies:
   flutter_test:
